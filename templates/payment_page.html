@@ -1,3 +1,4 @@
+{% comment %} id-tdakar40@gmail.com ps-Tenzindakar65@ {% endcomment %}
 {% extends 'base.html' %}
 
 {% block body %}
@@ -12,11 +13,13 @@ var options = {
     "amount": "{{ amount }}",
     "currency": "INR",
     "name": "My Shop",
-    "description": "Test Payment",
+    "description": "Food Delivery Payment",
     "order_id": "{{ order_id }}",
-    "handler": function (response){
-        alert("Payment Successful!");
-        // You can also send the response.razorpay_payment_id to your backend to verify
+    // This is the URL where Razorpay will POST the success data
+    "callback_url": "http://127.0.0.1:8000/payment-success/", 
+    "prefill": {
+        "name": "Tenzin Dakar",
+        "email": "tdakar40@gmail.com",
     },
     "theme": {
         "color": "#3399cc"

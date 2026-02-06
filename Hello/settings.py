@@ -150,6 +150,6 @@ CACHES = {
 }
 
 
-RAZORPAY_KEY_ID = 'your_key_id'
-RAZORPAY_KEY_SECRET = 'your_key_secret'
 
+RAZORPAY_KEY_ID = 'rzp_test_S8RPc5SoZKxdSi'
+RAZORPAY_KEY_SECRET = 'o52jFDCfhvFmAjs4HKYCItz5'

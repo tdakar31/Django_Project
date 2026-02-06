@@ -19,6 +19,6 @@ urlpatterns = [
     # path('initiate-payment', views.initiate_payment, name='initiate_payment'),
     # path('order-success', views.order_success, name='order_success'),
     # path('clear-session/', views.clear_session, name='clear_session'),
-
+    path('payment-success/', views.handle_payment_success, name='payment_success'),
    
 ]

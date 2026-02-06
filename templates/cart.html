@@ -101,48 +101,46 @@
     }
 
     function proceedToPay() {
-        let cart = JSON.parse(localStorage.getItem('cart')) || [];
-        if (cart.length === 0) {
-            alert("Your cart is empty.");
-            return;
-        }
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    if (cart.length === 0) {
+        alert("Your cart is empty.");
+        return;
+    }
 
-        let totalAmount = 0;
-        cart.forEach(item => {
-            totalAmount += parseFloat(item.price) * (item.quantity || 1);
-        });
+    let totalAmount = 0;
+    cart.forEach(item => {
+        totalAmount += parseFloat(item.price) * (item.quantity || 1);
+    });
 
-        // Convert to paise (Razorpay expects amount in paise)
-        let amountInPaise = Math.round(totalAmount * 100);
-
+    // 1. Send total to Django to create a real Order ID
+    fetch("/create-order/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRFToken": "{{ csrf_token }}" // Crucial for Django
+        },
+        body: `amount=${totalAmount}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        // 2. Now open Razorpay with the ID from Django
         var options = {
-            key: "YOUR_RAZORPAY_KEY",  // Replace with your Razorpay API key
-            amount: amountInPaise,
-            currency: "INR",
-            name: "Your Store Name",
-            description: "Purchase Description",
-            handler: function (response) {
-                alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
-                // Clear cart after successful payment
+            "key": data.razorpay_key, 
+            "amount": data.amount,
+            "currency": "INR",
+            "name": "Tenzin's Food Delivery",
+            "order_id": data.order_id, // This comes from your create_order view
+            "handler": function (response) {
+                // 3. On Success, redirect to your Order Success page
+                window.location.href = "/order-success";
                 localStorage.removeItem('cart');
-                updateCartCount();
-                loadCartItems();
-                // Optional: Redirect to success page
-                // window.location.href = '/payment-success/';
             },
-            modal: {
-                ondismiss: function(){
-                    alert('Payment popup closed.');
-                }
-            },
-            theme: {
-                color: "#3399cc"
-            }
+            "theme": { "color": "#28a745" }
         };
-
         var rzp = new Razorpay(options);
         rzp.open();
-    }
+    });
+}
 </script>
 
 {% endblock body %}

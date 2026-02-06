@@ -17,7 +17,7 @@ from django.core.cache import cache
 # from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.decorators import user_passes_test
 from django.http import JsonResponse, HttpResponseForbidden
-# from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt
 
 # from django.contrib.auth.decorators import login_required
 # from .models import Userss
@@ -124,8 +124,9 @@ def cart(request):
 
 def create_order(request):
     if request.method == "POST":
-        amount = int(float(request.POST.get('amount')) * 100)  # Razorpay uses paise
+        amount = int(float(request.POST.get('amount')) * 100)
         client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        
         order_data = {
             'amount': amount,
             'currency': 'INR',
@@ -133,8 +134,32 @@ def create_order(request):
         }
         order = client.order.create(data=order_data)
 
-        return render(request, 'payment_page.html', {
+        # Return JSON so the JavaScript can read the order_id
+        return JsonResponse({
             'order_id': order['id'],
             'amount': amount,
             'razorpay_key': settings.RAZORPAY_KEY_ID
         })
+
+@csrf_exempt
+def handle_payment_success(request):
+    if request.method == "POST":
+        res = request.POST
+        
+        # Data to verify
+        params_dict = {
+            'razorpay_order_id': res.get('razorpay_order_id'),
+            'razorpay_payment_id': res.get('razorpay_payment_id'),
+            'razorpay_signature': res.get('razorpay_signature')
+        }
+
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+        try:
+            # Check if payment is authentic
+            client.utility.verify_payment_signature(params_dict)
+            # LOGIC HERE: Update your Order model as "Paid"
+            messages.success(request, "Payment Verified Successfully!")
+            return render(request, "order_success.html")
+        except Exception as e:
+            return HttpResponse("Payment Verification Failed", status=400)
